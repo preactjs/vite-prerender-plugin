@@ -2,9 +2,10 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
+import dedent from 'dedent';
 
 import { setupTest, teardownTest, loadFixture, viteBuild } from './lib/lifecycle.js';
-import { getOutputFile, outputFileExists, writeFixtureFile } from './lib/utils.js';
+import { writeFixtureFile } from './lib/utils.js';
 
 const writeConfig = async (dir, content) => writeFixtureFile(dir, 'vite.config.js', content);
 
@@ -67,9 +68,9 @@ test('Should preserve sourcemaps if user has enabled them', async () => {
     assert.ok(outDirAssets.includes(outputMap));
 });
 
-test('Should use sourcemaps to display error positioning when possible', async () => {
+test('Should use sourcemaps to display error positioning for top-level throws', async () => {
     await loadFixture('simple', env);
-    await writeFixtureFile(env.tmp.path, 'src/index.js', `
+    await writeFixtureFile(env.tmp.path, 'src/index.js', dedent`
         document.createElement('div');
         export async function prerender() {
             return '<h1>Simple Test Result</h1>';
@@ -84,7 +85,27 @@ test('Should use sourcemaps to display error positioning when possible', async (
     }
 
     assert.match(message, 'ReferenceError: document is not defined');
-    assert.match(message, 'src/index.js:2:9');
+    assert.match(message, 'src/index.js:1:1');
+});
+
+test('Should use sourcemaps to display error positioning for throws during prerender', async () => {
+    await loadFixture('simple', env);
+    await writeFixtureFile(env.tmp.path, 'src/index.js', dedent`
+        export async function prerender() {
+            document.createElement('div');
+            return '<h1>Simple Test Result</h1>';
+        }`,
+    );
+
+    let message = '';
+    try {
+        await viteBuild(env.tmp.path);
+    } catch (error) {
+        message = error.message;
+    }
+
+    assert.match(message, 'ReferenceError: document is not defined');
+    assert.match(message, 'src/index.js:2:5');
 });
 
 test.run();

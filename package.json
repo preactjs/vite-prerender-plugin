@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
+    "dedent": "^1.5.3",
     "prettier": "^2.8.8",
     "prettier-config-rschristian": "^0.1.1",
     "tmp-promise": "^3.0.3",

@@ -241,7 +241,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 viteConfig.root,
                 'node_modules',
                 'vite-prerender-plugin',
-                tmpDirId
+                tmpDirId,
             );
             try {
                 await fs.rm(tmpDir, { recursive: true });
@@ -273,31 +273,21 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 this.error('Cannot detect module with `prerender` export');
             }
 
-            /** @type {import('./types.d.ts').Head} */
-            let head = { lang: '', title: '', elements: new Set() };
-
-            let prerender;
-            try {
-                const m = await import(
-                    `file://${path.join(tmpDir, path.basename(prerenderEntry.fileName))}`
-                );
-                prerender = m.prerender;
-            } catch (e) {
+            const handlePrerenderError = async (e) => {
                 const isReferenceError = e instanceof ReferenceError;
 
-                let message = `
-					${e}
+                let message = `\n
+                    ${e}
 
-					This ${
+                    This ${
                         isReferenceError ? 'is most likely' : 'could be'
                     } caused by using DOM/Web APIs which are not available
-					available to the prerendering process running in Node. Consider
-					wrapping the offending code in a window check like so:
+                    available to the prerendering process running in Node. Consider wrapping
+                    the offending code in a window check like so:
 
-					if (typeof window !== "undefined") {
-						// do something in browsers only
-					}
-				`.replace(/^\t{5}/gm, '');
+                    if (typeof window !== "undefined") {
+                        // do something in browsers only
+                    }`.replace(/^ {20}/gm, '');
 
                 const stack = StackTraceParse(e).find((s) =>
                     s.getFileName().includes(tmpDirId),
@@ -324,13 +314,26 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
                         // `simple-code-frame` has 1-based line numbers
                         const frame = createCodeFrame(sourceContent, line - 1, column);
-                        message += `
-							> ${sourcePath}:${line}:${column + 1}\n
-							${frame}
-						`.replace(/^\t{7}/gm, '');
+                        message += `\n
+                            > ${sourcePath}:${line}:${column + 1}\n
+                            ${frame}`.replace(/^ {28}/gm, '');
                     });
                 }
 
+                return message;
+            };
+
+            /** @type {import('./types.d.ts').Head} */
+            let head = { lang: '', title: '', elements: new Set() };
+
+            let prerender;
+            try {
+                const m = await import(
+                    `file://${path.join(tmpDir, path.basename(prerenderEntry.fileName))}`
+                );
+                prerender = m.prerender;
+            } catch (e) {
+                const message = await handlePrerenderError(e);
                 this.error(message);
             }
 
@@ -359,7 +362,14 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                     } catch {}
                 }
 
-                const result = await prerender({ ssr: true, url: route.url, route });
+                let result;
+                try {
+                    result = await prerender({ ssr: true, url: route.url, route });
+                } catch (e) {
+                    const message = await handlePrerenderError(e);
+                    this.error(message);
+                }
+
                 if (result == null) {
                     this.warn(`No result returned for route: ${route.url}`);
                     continue;
