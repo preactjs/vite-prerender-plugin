@@ -117,7 +117,7 @@ export async function prerender() {
 
 ## Licenses
 
-[MIT](https://github.com/rschristian/vite-prerender-plugin/blob/master/LICENSE)
+[MIT](https://github.com/preactjs/vite-prerender-plugin/blob/master/LICENSE)
 
 [WMR - MIT](https://github.com/preactjs/wmr/blob/main/LICENSE)
 

@@ -6,11 +6,12 @@
     ".": "./src/index.js",
     "./parse": "./src/parse.js"
   },
+  "authors": "The Preact Authors (https://preactjs.com)",
   "license": "MIT",
   "description": "A Vite plugin for prerendering apps to HTML at build time",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rschristian/vite-prerender-plugin.git"
+    "url": "git+https://github.com/preactjs/vite-prerender-plugin.git"
   },
   "files": [
     "src",
