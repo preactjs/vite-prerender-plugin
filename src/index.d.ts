@@ -12,4 +12,4 @@ export interface PreviewMiddlewareOptions {
 
 export type Options = PrerenderOptions & PreviewMiddlewareOptions;
 
-export function vitePrerenderPlugin(options?: Options): Plugin;
+export function vitePrerenderPlugin(options?: Options): Plugin[];
