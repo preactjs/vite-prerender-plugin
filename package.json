@@ -2,6 +2,7 @@
   "name": "vite-prerender-plugin",
   "version": "0.5.2",
   "type": "module",
+  "types": "./src/index.d.ts",
   "exports": {
     ".": "./src/index.js",
     "./parse": "./src/parse.js"
