@@ -20,9 +20,6 @@ export async function setupTest() {
  * @param {TestEnv} env
  */
 export async function teardownTest(env) {
-    // ESBuild seems to keep running after Vite shuts down
-    // so we need to wait a little before cleaning up the tmp dir
-    //await new Promise((r) => setTimeout(r, 50));
     await env.tmp.cleanup();
 }
 
@@ -33,10 +30,6 @@ export async function teardownTest(env) {
 export async function loadFixture(name, env) {
     const fixture = path.join(__dirname, '..', 'fixtures', name);
 
-    // Ensure fixture name is included for parent alias tests
-    //env.tmp.path = path.join(env.tmp.path, path.basename(name));
-    //await fs.mkdir(env.tmp.path, { recursive: true });
-
     await fs.cp(fixture, env.tmp.path, { recursive: true });
     await fs.writeFile(path.join(env.tmp.path, 'package.json'), JSON.stringify({ type: 'module' }));
 
@@ -45,7 +38,7 @@ export async function loadFixture(name, env) {
 
 export async function viteBuild(cwd) {
     await build({
-        logLevel: 'warn',
+        logLevel: 'silent',
         root: cwd,
         configFile: path.join(cwd, 'vite.config.js'),
     });
