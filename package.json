@@ -21,6 +21,7 @@
     "README.md"
   ],
   "scripts": {
+    "prepublishOnly": "pnpm test",
     "test": "uvu tests '.test.js'",
     "format": "prettier --write --ignore-path .gitignore ."
   },
