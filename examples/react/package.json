@@ -12,8 +12,8 @@
     "react-router-dom": "^6.24.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.2.0",
-    "vite-prerender-plugin": "^0.2.2"
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.7",
+    "vite-prerender-plugin": "^0.5.3"
   }
 }
