@@ -124,6 +124,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 Array.isArray(config.build.rollupOptions.output) ||
                 config.build.rollupOptions.output?.manualChunks
             ) {
+                viteConfig = config;
                 return;
             }
 
