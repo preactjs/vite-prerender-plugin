@@ -4,7 +4,9 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 
 import { setupTest, teardownTest, loadFixture, viteBuild } from './lib/lifecycle.js';
-import { getOutputFile } from './lib/utils.js';
+import { getOutputFile, writeFixtureFile } from './lib/utils.js';
+
+const writeConfig = async (dir, content) => writeFixtureFile(dir, 'vite.config.js', content);
 
 let env;
 test.before.each(async () => {
@@ -21,12 +23,45 @@ test('Should prerender and output correct file structure', async () => {
 
     const prerenderedHtml = await getOutputFile(env.tmp.path, 'index.html');
     assert.match(prerenderedHtml, '<h1>Simple Test Result</h1>');
+});
+
+test('Should merge preload and entry chunks', async () => {
+    await loadFixture('simple', env);
+    await viteBuild(env.tmp.path);
 
     const outDir = path.join(env.tmp.path, 'dist');
     const outDirAssets = path.join(outDir, 'assets');
 
     assert.equal((await fs.readdir(outDir)).length, 2);
+    // Would be 2 if not merged
     assert.equal((await fs.readdir(outDirAssets)).length, 1);
+});
+
+test('Should bail on merging preload & entry chunks if user configures `manualChunks`', async () => {
+    await loadFixture('simple', env);
+    await writeConfig(env.tmp.path, `
+        import { defineConfig } from 'vite';
+        import { vitePrerenderPlugin } from 'vite-prerender-plugin';
+
+        export default defineConfig({
+            build: {
+                rollupOptions: {
+                    output: {
+                        manualChunks: {}
+                    }
+                }
+            },
+            plugins: [vitePrerenderPlugin()],
+        });
+    `);
+
+    await viteBuild(env.tmp.path);
+
+    const outDir = path.join(env.tmp.path, 'dist');
+    const outDirAssets = path.join(outDir, 'assets');
+
+    assert.equal((await fs.readdir(outDir)).length, 2);
+    assert.equal((await fs.readdir(outDirAssets)).length, 2);
 });
 
 test.run();
