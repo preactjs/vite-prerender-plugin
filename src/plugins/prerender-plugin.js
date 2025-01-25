@@ -463,6 +463,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
                         if (output.endsWith('.js')) {
                             const codeOrSource = bundle[output].type == 'chunk' ? 'code' : 'source';
+                            if (typeof bundle[output][codeOrSource] !== 'string') continue;
                             bundle[output][codeOrSource] = bundle[output][codeOrSource].replace(
                                 /\n\/\/#\ssourceMappingURL=.*/,
                                 '',
