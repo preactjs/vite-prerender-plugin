@@ -234,7 +234,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             const tpl = /** @type {string} */ (
                 /** @type {OutputAsset} */ (bundle['index.html']).source
             );
-            let htmlDoc = htmlParse(tpl);
+            let htmlDoc = htmlParse(tpl, { comment: true });
 
             // Create a tmp dir to allow importing & consuming the built modules,
             // before Rollup writes them to the disk
@@ -377,7 +377,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 }
 
                 // Reset HTML doc & head data
-                htmlDoc = htmlParse(tpl);
+                htmlDoc = htmlParse(tpl, { comment: true });
                 head = { lang: '', title: '', elements: new Set() };
 
                 // Add any discovered links to the list of routes to pre-render:
