@@ -64,4 +64,13 @@ test('Should bail on merging preload & entry chunks if user configures `manualCh
     assert.equal((await fs.readdir(outDirAssets)).length, 2);
 });
 
+test('Should support comment nodes in returned HTML', async () => {
+    await loadFixture('comments', env);
+    await viteBuild(env.tmp.path);
+
+    const prerenderedHtml = await getOutputFile(env.tmp.path, 'index.html');
+    assert.match(prerenderedHtml, '<h1>Simple Test Result <!-- With Output HTML Comment --></h1>');
+    assert.match(prerenderedHtml, '<!-- With Input HTML Comment -->');
+});
+
 test.run();
