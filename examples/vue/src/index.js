@@ -1,5 +1,5 @@
-import { createApp, createSSRApp } from 'vue';
 // Vite can't seem to split a module w/ static & dynamic imports, so may as well statically import everything
+import { createApp, createSSRApp } from 'vue';
 import { createWebHistory, createMemoryHistory, createRouter } from 'vue-router';
 
 import App from './App.vue';
@@ -19,7 +19,9 @@ if (typeof window !== 'undefined') {
     });
 
     const app = import.meta.env.DEV ? createApp(App) : createSSRApp(App);
-    app.use(router).mount('#app');
+    app.use(router);
+
+    router.isReady().then(() => app.mount('#app'));
 }
 
 export async function prerender(data) {

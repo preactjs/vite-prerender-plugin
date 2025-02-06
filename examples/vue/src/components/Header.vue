@@ -1,8 +1,8 @@
 <template>
     <header>
         <nav>
-            <RouterLink to="/" activeClass="active"> Home </RouterLink>
-            <RouterLink to="/404" activeClass="active"> 404 </RouterLink>
+            <RouterLink to="/" activeClass="active">Home</RouterLink>
+            <RouterLink to="/404" activeClass="active">404</RouterLink>
         </nav>
     </header>
 </template>
