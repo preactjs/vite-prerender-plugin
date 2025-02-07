@@ -230,11 +230,10 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 return globalThis.unpatchedFetch(url, opts);
             };
 
-            // Grab the generated HTML file, which we'll use as a template:
+            // Grab the generated HTML file, we'll use it as a template for all pages:
             const tpl = /** @type {string} */ (
                 /** @type {OutputAsset} */ (bundle['index.html']).source
             );
-            let htmlDoc = htmlParse(tpl, { comment: true });
 
             // Create a tmp dir to allow importing & consuming the built modules,
             // before Rollup writes them to the disk
@@ -377,7 +376,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 }
 
                 // Reset HTML doc & head data
-                htmlDoc = htmlParse(tpl, { comment: true });
+                const htmlDoc = htmlParse(tpl, { comment: true });
                 head = { lang: '', title: '', elements: new Set() };
 
                 // Add any discovered links to the list of routes to pre-render:
