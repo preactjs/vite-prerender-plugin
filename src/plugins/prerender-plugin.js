@@ -81,11 +81,11 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
     const getPrerenderScriptFromHTML = async (input) => {
         // prettier-ignore
         const entryHtml =
-			typeof input === "string"
-				? input
-				: Array.isArray(input)
-					? input.find(i => /html$/.test(i))
-					: Object.values(input).find(i => /html$/.test(i));
+            typeof input === "string"
+                    ? input
+                    : Array.isArray(input)
+                            ? input.find(i => /html$/.test(i))
+                            : Object.values(input).find(i => /html$/.test(i));
 
         if (!entryHtml) throw new Error('Unable to detect entry HTML');
 
@@ -145,11 +145,11 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
             // prettier-ignore
             opts.input =
-				typeof opts.input === "string"
-					? [opts.input, prerenderScript]
-					: Array.isArray(opts.input)
-						? [...opts.input, prerenderScript]
-						: { ...opts.input, prerenderEntry: prerenderScript };
+                typeof opts.input === "string"
+                        ? [opts.input, prerenderScript]
+                        : Array.isArray(opts.input)
+                                ? [...opts.input, prerenderScript]
+                                : { ...opts.input, prerenderEntry: prerenderScript };
             opts.preserveEntrySignatures = 'allow-extension';
         },
         // Injects window checks into Vite's preload helper & modulepreload polyfill
