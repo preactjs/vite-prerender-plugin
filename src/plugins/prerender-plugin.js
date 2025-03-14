@@ -1,16 +1,32 @@
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 
+import { createLogger } from 'vite';
 import MagicString from 'magic-string';
 import { parse as htmlParse } from 'node-html-parser';
 import { SourceMapConsumer } from 'source-map';
 import { parse as StackTraceParse } from 'stack-trace';
 import { createCodeFrame } from 'simple-code-frame';
+import * as kl from 'kolorist';
 
 /**
  * @typedef {import('vite').Rollup.OutputChunk} OutputChunk
  * @typedef {import('vite').Rollup.OutputAsset} OutputAsset
  */
+
+const logger = createLogger();
+const loggerInfo = logger.info;
+
+/**
+ * @param {import('./types.d.ts').PrerenderedRoute[]} routes
+ */
+export function prerenderedRoutes(routes) {
+    return routes.reduce((s, r) => {
+        s += `\n  ${r.url}`;
+        if (r._discoveredBy) s += kl.dim(` [from ${r._discoveredBy.url}]`);
+        return s;
+    }, '');
+}
 
 /**
  * @param {string} str
@@ -62,6 +78,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
     let viteConfig = {};
     let userEnabledSourceMaps;
 
+    /** @type {import('./types.d.ts').PrerenderedRoute[]} */
+    let routes = [];
+
     renderTarget ||= 'body';
     additionalPrerenderRoutes ||= [];
 
@@ -112,6 +131,19 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
         // hooks are needed to set their respective options. ¯\_(ツ)_/¯
         config(config) {
             userEnabledSourceMaps = !!config.build?.sourcemap;
+
+            config.customLogger = {
+                ...config.customLogger,
+                info: (msg) => {
+                    loggerInfo(msg);
+                    if (msg.includes('built in')) {
+                        loggerInfo(
+                            kl.bold(`Prerendered ${routes.length} ${routes.length > 1 ? 'pages' : 'page'}:`) +
+                            prerenderedRoutes(routes)
+                        );
+                    }
+                },
+            }
 
             // Enable sourcemaps for generating more actionable error messages
             config.build ??= {};
@@ -345,8 +377,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             // Links discovered during pre-rendering get pushed into the list of routes.
             const seen = new Set(['/', ...additionalPrerenderRoutes]);
 
-            /** @type {import('./types.d.ts').PrerenderedRoute[]} */
-            let routes = [...seen].map((link) => ({ url: link }));
+            routes = [...seen].map((link) => ({ url: link }));
 
             for (const route of routes) {
                 if (!route.url) continue;

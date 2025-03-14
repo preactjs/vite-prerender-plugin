@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      kolorist:
+        specifier: ^1.8.0
+        version: 1.8.0
       magic-string:
         specifier: ^0.30.6
         version: 0.30.10
