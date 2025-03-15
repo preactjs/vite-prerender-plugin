@@ -14,9 +14,6 @@ import * as kl from 'kolorist';
  * @typedef {import('vite').Rollup.OutputAsset} OutputAsset
  */
 
-const logger = createLogger();
-const loggerInfo = logger.info;
-
 /**
  * @param {import('./types.d.ts').PrerenderedRoute[]} routes
  */
@@ -132,17 +129,26 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
         config(config) {
             userEnabledSourceMaps = !!config.build?.sourcemap;
 
-            config.customLogger = {
-                ...config.customLogger,
-                info: (msg) => {
-                    loggerInfo(msg);
-                    if (msg.includes('built in')) {
-                        loggerInfo(
-                            kl.bold(`Prerendered ${routes.length} ${routes.length > 1 ? 'pages' : 'page'}:`) +
-                            prerenderedRoutes(routes)
-                        );
-                    }
-                },
+            if (!config.customLogger) {
+                const logger = createLogger(config.logLevel || 'info');
+                const loggerInfo = logger.info;
+
+                config.customLogger = {
+                    ...logger,
+                    info: (msg, options) => {
+                        loggerInfo(msg, options);
+                        if (msg.includes('built in')) {
+                            loggerInfo(
+                                kl.bold(
+                                    `Prerendered ${routes.length} ${
+                                        routes.length > 1 ? 'pages' : 'page'
+                                    }:`,
+                                ) + prerenderedRoutes(routes),
+                                options,
+                            );
+                        }
+                    },
+                };
             }
 
             // Enable sourcemaps for generating more actionable error messages
