@@ -34,6 +34,7 @@ export async function copyDependencies(cwd) {
     await copyNodeModule('simple-code-frame');
     await copyNodeModule('source-map');
     await copyNodeModule('stack-trace');
+    await copyNodeModule('kolorist');
 }
 
 /**
@@ -71,3 +72,5 @@ export async function outputFileExists(dir, file) {
 export async function writeFixtureFile(dir, filePath, content) {
     await fs.writeFile(path.join(dir, filePath), content);
 }
+
+export const stripColors = (str) => str.replace(/\x1b\[(?:[0-9]{1,3}(?:;[0-9]{1,3})*)?[m|K]/g, '');
