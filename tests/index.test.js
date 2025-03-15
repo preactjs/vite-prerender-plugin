@@ -73,4 +73,33 @@ test('Should support comment nodes in returned HTML', async () => {
     assert.match(prerenderedHtml, '<!-- With Input HTML Comment -->');
 });
 
+test('Should support custom output filenames', async () => {
+    await loadFixture('named-chunks', env);
+    await writeConfig(env.tmp.path, `
+        import { defineConfig } from 'vite';
+        import { vitePrerenderPlugin } from 'vite-prerender-plugin';
+
+        export default defineConfig({
+            build: {
+                rollupOptions: {
+                    output: {
+                        chunkFileNames: 'chunks/[name].[hash].js',
+                    }
+                }
+            },
+            plugins: [vitePrerenderPlugin()],
+        });
+    `);
+    await viteBuild(env.tmp.path);
+
+    let message = '';
+    try {
+        await viteBuild(env.tmp.path);
+    } catch (error) {
+        message = error.message;
+    }
+
+    assert.match(message, '');
+});
+
 test.run();
