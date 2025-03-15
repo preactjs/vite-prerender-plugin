@@ -136,7 +136,12 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 config.customLogger = {
                     ...logger,
                     info: (msg, options) => {
+                        if (msg.includes(' │ map:') && !userEnabledSourceMaps) {
+                            msg = msg.replace(/ │ map:.*/, '');
+                        }
+
                         loggerInfo(msg, options);
+
                         if (msg.includes('built in')) {
                             loggerInfo(
                                 kl.bold(
