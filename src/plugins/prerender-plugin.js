@@ -303,8 +303,10 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             for (const output of Object.keys(bundle)) {
                 if (!output.endsWith('.js') || bundle[output].type !== 'chunk') continue;
 
+                const assetPath = path.join(tmpDir, output);
+                await fs.mkdir(path.dirname(assetPath), { recursive: true });
                 await fs.writeFile(
-                    path.join(tmpDir, path.basename(output)),
+                    assetPath,
                     /** @type {OutputChunk} */ (bundle[output]).code,
                 );
 
@@ -372,7 +374,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             let prerender;
             try {
                 const m = await import(
-                    `file://${path.join(tmpDir, path.basename(prerenderEntry.fileName))}`
+                    `file://${path.join(tmpDir, prerenderEntry.fileName)}`
                 );
                 prerender = m.prerender;
             } catch (e) {
