@@ -507,10 +507,12 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                         if (output.endsWith('.js')) {
                             const codeOrSource = bundle[output].type == 'chunk' ? 'code' : 'source';
                             if (typeof bundle[output][codeOrSource] !== 'string') continue;
-                            bundle[output][codeOrSource] = bundle[output][codeOrSource].replace(
-                                /\n\/\/#\ssourceMappingURL=.*/,
-                                '',
-                            );
+
+                            const linesOfCode = bundle[output][codeOrSource].trimEnd().split('\n');
+                            if (/^\/\/#\ssourceMappingURL=.*\.map$/.test(linesOfCode.at(-1))) {
+                                linesOfCode.pop();
+                                bundle[output][codeOrSource] = linesOfCode.join('\n');
+                            }
                         }
                     }
                 }

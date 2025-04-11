@@ -11,3 +11,15 @@ if (typeof window !== 'undefined') {
 export async function prerender() {
     return `<h1>Simple Test Result</h1>`;
 }
+
+// Basically mirror preact-www's repl worker
+const PREPEND = `(function (module, exports) {\n`;
+const APPEND = `\n});`;
+export async function process() {
+    const code = `console.log('Hello World');`;
+    let transpiled = `${PREPEND}${code}${APPEND}`;
+
+    transpiled += '\n//# sourceMappingURL=' + 'some-url.js.map';
+
+    return transpiled;
+}
