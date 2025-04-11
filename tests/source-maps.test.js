@@ -32,14 +32,17 @@ test('Should strip sourcemaps by default', async () => {
         outDirAssets.find((f) => /^index-.*\.js$/.test(f)),
     );
     const outputChunkCode = await fs.readFile(outputChunk, 'utf-8');
-    assert.is(outputChunkCode.match(/\/\/#\ssourceMappingURL=(.*)/), null);
+    // Ensure arbitrary strings don't get stripped
+    assert.ok(outputChunkCode.match(/\/\/#\ssourceMappingURL=/));
+    // Ensure the sourcemap comment has been removed
+    assert.is(outputChunkCode.match(/^\/\/#\ssourceMappingURL=.*\.map$/m), null);
 
     const outputAsset = path.join(
         outDir,
         outDirAssets.find((f) => /^worker-.*\.js$/.test(f)),
     );
     const outputAssetSource = await fs.readFile(outputAsset, 'utf-8');
-    assert.is(outputAssetSource.match(/\/\/#\ssourceMappingURL=(.*)/), null);
+    assert.is(outputAssetSource.match(/^\/\/#\ssourceMappingURL=.*\.map$/m), null);
 });
 
 test('Should preserve sourcemaps if user has enabled them', async () => {
@@ -64,7 +67,7 @@ test('Should preserve sourcemaps if user has enabled them', async () => {
     const outputJs = await fs.readFile(path.join(outDir, outputJsFileName), 'utf-8');
     assert.match(outputJs, '//# sourceMappingURL=');
 
-    const outputMap = outputJs.match(/\/\/#\ssourceMappingURL=(.*)/)[1];
+    const outputMap = outputJs.match(/^\/\/#\ssourceMappingURL=(.*)\.map$/m)[1];
     assert.ok(outDirAssets.includes(outputMap));
 });
 
