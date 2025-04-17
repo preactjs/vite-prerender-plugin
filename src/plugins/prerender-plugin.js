@@ -74,6 +74,7 @@ function serializeElement(element) {
 export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrerenderRoutes } = {}) {
     let viteConfig = {};
     let userEnabledSourceMaps;
+    let ssrBuild = false;
 
     /** @type {import('./types.d.ts').PrerenderedRoute[]} */
     let routes = [];
@@ -127,6 +128,11 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
         // Vite is pretty inconsistent with how it resolves config options, both
         // hooks are needed to set their respective options. ¯\_(ツ)_/¯
         config(config) {
+            if (config.build?.ssr) {
+                ssrBuild = true
+                return;
+            }
+
             userEnabledSourceMaps = !!config.build?.sourcemap;
 
             if (!config.customLogger) {
@@ -161,6 +167,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             config.build.sourcemap = true;
         },
         configResolved(config) {
+            if (ssrBuild) return;
             // We're only going to alter the chunking behavior in the default cases, where the user and/or
             // other plugins haven't already configured this. It'd be impossible to avoid breakages otherwise.
             if (
@@ -181,7 +188,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             viteConfig = config;
         },
         async options(opts) {
-            if (!opts.input) return;
+            if (ssrBuild || !opts.input) return;
             if (!prerenderScript) {
                 prerenderScript = await getPrerenderScriptFromHTML(opts.input);
             }
@@ -197,6 +204,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
         },
         // Injects window checks into Vite's preload helper & modulepreload polyfill
         transform(code, id) {
+            if (ssrBuild) return;
             if (id.includes(preloadHelperId)) {
                 // Injects a window check into Vite's preload helper, instantly resolving
                 // the module rather than attempting to add a <link> to the document.
@@ -238,6 +246,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             }
         },
         async generateBundle(_opts, bundle) {
+            if (ssrBuild) return;
             // @ts-ignore
             globalThis.location = {};
             // @ts-ignore
