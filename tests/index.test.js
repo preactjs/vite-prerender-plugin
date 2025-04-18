@@ -90,7 +90,6 @@ test('Should support custom output filenames', async () => {
             plugins: [vitePrerenderPlugin()],
         });
     `);
-    await viteBuild(env.tmp.path);
 
     let message = '';
     try {

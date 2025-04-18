@@ -37,6 +37,7 @@
     "stack-trace": "^1.0.0-pre2"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.0.8",
     "@types/node": "^20.11.16",
     "dedent": "^1.5.3",
     "magic-string": "^0.30.6",
@@ -44,7 +45,7 @@
     "prettier-config-rschristian": "^0.1.1",
     "tmp-promise": "^3.0.3",
     "uvu": "^0.5.6",
-    "vite": "^5.0.12"
+    "vite": "^6.3.1"
   },
   "prettier": "prettier-config-rschristian"
 }
