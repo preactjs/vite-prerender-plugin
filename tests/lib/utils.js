@@ -35,6 +35,9 @@ export async function copyDependencies(cwd) {
     await copyNodeModule('source-map');
     await copyNodeModule('stack-trace');
     await copyNodeModule('kolorist');
+
+    // Dependencies used by tests
+    await copyNodeModule('@cloudflare/vite-plugin');
 }
 
 /**

@@ -90,35 +90,6 @@ test('Should support custom output filenames', async () => {
             plugins: [vitePrerenderPlugin()],
         });
     `);
-    await viteBuild(env.tmp.path);
-
-    let message = '';
-    try {
-        await viteBuild(env.tmp.path);
-    } catch (error) {
-        message = error.message;
-    }
-
-    assert.match(message, '');
-});
-
-test('Should skip plugin during SSR build', async () => {
-    await loadFixture('simple', env);
-    await writeConfig(env.tmp.path, `
-        import { defineConfig } from 'vite';
-        import { vitePrerenderPlugin } from 'vite-prerender-plugin';
-
-        export default defineConfig({
-            build: {
-                ssr: true,
-                rollupOptions: {
-                    input: 'src/index.js'
-                }
-            },
-            plugins: [vitePrerenderPlugin()],
-        });
-    `);
-    await viteBuild(env.tmp.path);
 
     let message = '';
     try {

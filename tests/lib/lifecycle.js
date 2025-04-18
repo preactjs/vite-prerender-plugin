@@ -50,9 +50,10 @@ export async function viteBuild(cwd) {
 
 /**
  * @param {string} cwd
+ * @param {string[]} flags
  */
-export async function viteBuildCli(cwd) {
-    const child = childProcess.spawn('node', ['node_modules/vite/bin/vite.js', 'build'], {
+export async function viteBuildCli(cwd, flags = []) {
+    const child = childProcess.spawn('node', ['node_modules/vite/bin/vite.js', 'build', ...flags], {
         cwd,
     });
 
