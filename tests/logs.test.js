@@ -22,11 +22,13 @@ test('Should log which routes were prerendered & where they were discovered', as
 
     // The prerender info is pushed as a single log line
     const stdout = output.stdout.find((line) => line.includes('Prerendered'));
+    const stderr = output.stderr;
 
     assert.match(stdout, 'Prerendered 3 pages:\n');
     assert.match(stdout, '/\n');
     assert.match(stdout, '/foo [from /]\n');
     assert.match(stdout, '/bar [from /foo]\n');
+    assert.equal(stderr, []);
 });
 
 test('Should strip sourcemap sizes from logs if user has not enabled sourcemaps', async () => {
@@ -35,7 +37,10 @@ test('Should strip sourcemap sizes from logs if user has not enabled sourcemaps'
     await output.done;
 
     const stdout = output.stdout.find((line) => /dist\/assets\/index.*\.js/.test(line));
+    const stderr = output.stderr;
+
     assert.not.match(stdout, '│ map:');
+    assert.equal(stderr, []);
 });
 
 test('Should preserve sourcemap sizes from logs if user has enabled sourcemaps', async () => {
@@ -53,7 +58,10 @@ test('Should preserve sourcemap sizes from logs if user has enabled sourcemaps',
     await output.done;
 
     const stdout = output.stdout.find((line) => /dist\/assets\/index.*\.js/.test(line));
+    const stderr = output.stderr;
+
     assert.match(stdout, '│ map:');
+    assert.equal(stderr, []);
 });
 
 test.run();
