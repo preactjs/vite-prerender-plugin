@@ -125,9 +125,14 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
         name: 'vite-prerender-plugin',
         apply: 'build',
         enforce: 'post',
+        applyToEnvironment(environment) {
+            return environment.name == 'client';
+        },
         // Vite is pretty inconsistent with how it resolves config options, both
         // hooks are needed to set their respective options. ¯\_(ツ)_/¯
         config(config) {
+            // Only required for Vite 5 and older. In 6+, this is handled by the
+            // Environment API (`applyToEnvironment`)
             if (config.build?.ssr) {
                 ssrBuild = true
                 return;
