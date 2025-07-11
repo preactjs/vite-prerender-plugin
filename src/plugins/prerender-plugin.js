@@ -509,28 +509,28 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                           fileName: assetName,
                           source: htmlDoc.toString(),
                       });
+            }
 
-                // Clean up source maps if the user didn't enable them themselves
-                if (!userEnabledSourceMaps) {
-                    for (const output of Object.keys(bundle)) {
-                        if (output.endsWith('.map')) {
-                            delete bundle[output];
-                            continue;
-                        }
+            // Clean up source maps if the user didn't enable them themselves
+            if (!userEnabledSourceMaps) {
+                for (const output of Object.keys(bundle)) {
+                    if (output.endsWith('.map')) {
+                        delete bundle[output];
+                        continue;
+                    }
 
-                        if (output.endsWith('.js')) {
-                            const codeOrSource = bundle[output].type == 'chunk' ? 'code' : 'source';
-                            if (typeof bundle[output][codeOrSource] !== 'string') continue;
+                    if (output.endsWith('.js')) {
+                        const codeOrSource = bundle[output].type == 'chunk' ? 'code' : 'source';
+                        if (typeof bundle[output][codeOrSource] !== 'string') continue;
 
-                            const linesOfCode = bundle[output][codeOrSource].trimEnd().split('\n');
-                            if (/^\/\/#\ssourceMappingURL=.*\.map$/.test(linesOfCode.at(-1))) {
-                                linesOfCode.pop();
-                                bundle[output][codeOrSource] = linesOfCode.join('\n');
-                            }
+                        const linesOfCode = bundle[output][codeOrSource].trimEnd().split('\n');
+                        if (/^\/\/#\ssourceMappingURL=.*\.map$/.test(linesOfCode.at(-1))) {
+                            linesOfCode.pop();
+                            bundle[output][codeOrSource] = linesOfCode.join('\n');
                         }
                     }
                 }
             }
-        },
+        }
     };
 }
