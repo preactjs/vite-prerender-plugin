@@ -349,7 +349,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                     }`.replace(/^ {20}/gm, '');
 
                 const stack = StackTraceParse(e).find((s) =>
-                    s.getFileName().includes(tmpDirId),
+                    s.getFileName()?.includes(tmpDirId),
                 );
 
                 const sourceMapContent = prerenderEntry.map;
