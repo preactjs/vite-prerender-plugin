@@ -94,6 +94,29 @@ test('Should support `head.title` property', async () => {
     assert.match(prerenderedHtml, '<title>My Prerendered Site</title>');
 });
 
+test('Should support `head.startElements` property', async () => {
+    await loadFixture('simple', env);
+    await writeEntry(
+        env.tmp.path,
+        `
+        export async function prerender() {
+            return {
+                html: '<h1>Hello, World!</h1>',
+                head: {
+                    startElements: new Set([
+                        { type: 'link', props: { rel: 'stylesheet', href: 'foo.css' } },
+                    ]),
+                },
+            };
+        }
+    `,
+    );
+    await viteBuild(env.tmp.path);
+
+    const prerenderedHtml = await getOutputFile(env.tmp.path, 'index.html');
+    assert.match(prerenderedHtml, '<link rel="stylesheet" href="foo.css">');
+});
+
 test('Should support `head.elements` property', async () => {
     await loadFixture('simple', env);
     await writeEntry(env.tmp.path, `

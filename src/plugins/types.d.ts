@@ -7,6 +7,13 @@ export interface HeadElement {
 export interface Head {
     lang: string;
     title: string;
+    /**
+     * Which elements should be injected in the **start** of <head>
+     */
+    startElements: Set<HeadElement>;
+    /**
+     * Which elements should be injected in the **end** of <head>
+     */
     elements: Set<HeadElement>;
 }
 

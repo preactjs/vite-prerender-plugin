@@ -383,7 +383,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             };
 
             /** @type {import('./types.d.ts').Head} */
-            let head = { lang: '', title: '', elements: new Set() };
+            let head = { lang: '', title: '', elements: new Set(), startElements: new Set() };
 
             let prerender;
             try {
@@ -435,7 +435,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
                 // Reset HTML doc & head data
                 const htmlDoc = htmlParse(tpl, { comment: true });
-                head = { lang: '', title: '', elements: new Set() };
+                head = { lang: '', title: '', elements: new Set(), startElements: new Set() };
 
                 // Add any discovered links to the list of routes to pre-render:
                 if (result.links) {
@@ -478,6 +478,16 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
                     if (head.lang) {
                         htmlDoc.querySelector('html').setAttribute('lang', enc(head.lang));
+                    }
+
+                    if (head.startElements) {
+                        // Inject HTML links at the start of <head> for any stylesheets injected during rendering of the page:
+                        htmlHead.insertAdjacentHTML(
+                            'afterbegin',
+                            Array.from(
+                                new Set(Array.from(head.startElements).map(serializeElement)),
+                            ).join('\n'),
+                        );
                     }
 
                     if (head.elements) {
