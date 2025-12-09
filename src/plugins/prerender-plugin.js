@@ -382,7 +382,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 return message;
             };
 
-            /** @type {import('./types.d.ts').Head} */
+            /** @type {Partial<import('./types.d.ts').Head>} */
             let head = { lang: '', title: '', elements: new Set() };
 
             let prerender;
@@ -420,9 +420,12 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                     } catch {}
                 }
 
+                /** @type {import('./types.d.ts').PrerenderResult | string} */
                 let result;
                 try {
-                    result = await prerender({ ssr: true, url: route.url, route });
+                    /** @type {import('./types.d.ts').PrerenderOptions} */
+                    const options = { ssr: true, url: route.url, route };
+                    result = await prerender(options);
                 } catch (e) {
                     const message = await handlePrerenderError(e);
                     this.error(message);
@@ -438,7 +441,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 head = { lang: '', title: '', elements: new Set() };
 
                 // Add any discovered links to the list of routes to pre-render:
-                if (result.links) {
+                if (typeof result === 'object' && result.links) {
                     for (let url of result.links) {
                         const parsed = new URL(url, 'http://localhost');
                         url = parsed.pathname.replace(/\/$/, '') || '/';
@@ -494,9 +497,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 const target = htmlDoc.querySelector(renderTarget);
                 if (!target)
                     this.error(
-                        result.renderTarget == 'body'
+                        renderTarget == 'body'
                             ? '`renderTarget` was not specified in plugin options and <body> does not exist in input HTML template'
-                            : `Unable to detect prerender renderTarget "${result.selector}" in input HTML template`,
+                            : `Unable to detect prerender renderTarget "${renderTarget}" in input HTML template`,
                     );
                 target.insertAdjacentHTML('afterbegin', body);
 
