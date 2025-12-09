@@ -8,6 +8,7 @@ export interface Head {
     lang: string;
     title: string;
     elements: Set<HeadElement>;
+    base: string;
 }
 
 export interface PrerenderedRoute {

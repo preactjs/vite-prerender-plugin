@@ -480,6 +480,16 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                         htmlDoc.querySelector('html').setAttribute('lang', enc(head.lang));
                     }
 
+                    if (head.base) {
+                        const htmlBase = htmlHead.querySelector('base');
+                        htmlBase
+                            ? htmlBase.setAttribute('href', enc(head.base))
+                            : htmlHead.insertAdjacentHTML(
+                                  'afterbegin',
+                                  `<base href="${enc(head.base)}" >`,
+                              );
+                    }
+
                     if (head.elements) {
                         // Inject HTML links at the end of <head> for any stylesheets injected during rendering of the page:
                         htmlHead.insertAdjacentHTML(

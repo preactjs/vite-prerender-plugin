@@ -94,6 +94,25 @@ test('Should support `head.title` property', async () => {
     assert.match(prerenderedHtml, '<title>My Prerendered Site</title>');
 });
 
+test('Should support `head.base` property', async () => {
+    await loadFixture('simple', env);
+    await writeEntry(
+        env.tmp.path,
+        `
+        export async function prerender() {
+            return {
+                html: '<h1>Hello, World!</h1>',
+                head: { base: '/' },
+            };
+        }
+    `,
+    );
+    await viteBuild(env.tmp.path);
+
+    const prerenderedHtml = await getOutputFile(env.tmp.path, 'index.html');
+    assert.match(prerenderedHtml, '<base href="/" >');
+});
+
 test('Should support `head.elements` property', async () => {
     await loadFixture('simple', env);
     await writeEntry(env.tmp.path, `
