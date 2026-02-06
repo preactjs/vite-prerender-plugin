@@ -15,18 +15,15 @@ export interface PrerenderedRoute {
     _discoveredBy?: PrerenderedRoute;
 }
 
-export interface PrerenderOptions {
+export interface PrerenderArguments {
     ssr: true;
     url: string;
     route: PrerenderedRoute;
 }
 
-export interface PrerenderResult {
-    html?: string;
-    head?: Partial<Head>;
+export type PrerenderResult = {
+    html: string;
     links?: Set<string>;
-    /**
-     * @description Caution: should be a valid JSON object
-     */
     data?: any;
-}
+    head?: Partial<Head>;
+} | string
