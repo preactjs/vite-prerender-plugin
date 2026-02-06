@@ -420,12 +420,10 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                     } catch {}
                 }
 
-                /** @type {import('./types.d.ts').PrerenderResult | string} */
+                /** @type {import('./types.d.ts').PrerenderResult} */
                 let result;
                 try {
-                    /** @type {import('./types.d.ts').PrerenderOptions} */
-                    const options = { ssr: true, url: route.url, route };
-                    result = await prerender(options);
+                    result = await prerender({ ssr: true, url: route.url, route });
                 } catch (e) {
                     const message = await handlePrerenderError(e);
                     this.error(message);
@@ -441,7 +439,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 head = { lang: '', title: '', elements: new Set() };
 
                 // Add any discovered links to the list of routes to pre-render:
-                if (typeof result === 'object' && result.links) {
+                if (result.links) {
                     for (let url of result.links) {
                         const parsed = new URL(url, 'http://localhost');
                         url = parsed.pathname.replace(/\/$/, '') || '/';
