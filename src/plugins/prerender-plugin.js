@@ -382,7 +382,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 return message;
             };
 
-            /** @type {import('./types.d.ts').Head} */
+            /** @type {Partial<import('./types.d.ts').Head>} */
             let head = { lang: '', title: '', elements: new Set() };
 
             let prerender;
@@ -420,6 +420,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                     } catch {}
                 }
 
+                /** @type {import('./types.d.ts').PrerenderResult} */
                 let result;
                 try {
                     result = await prerender({ ssr: true, url: route.url, route });
@@ -494,9 +495,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 const target = htmlDoc.querySelector(renderTarget);
                 if (!target)
                     this.error(
-                        result.renderTarget == 'body'
+                        renderTarget == 'body'
                             ? '`renderTarget` was not specified in plugin options and <body> does not exist in input HTML template'
-                            : `Unable to detect prerender renderTarget "${result.selector}" in input HTML template`,
+                            : `Unable to detect prerender renderTarget "${renderTarget}" in input HTML template`,
                     );
                 target.insertAdjacentHTML('afterbegin', body);
 
