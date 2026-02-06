@@ -465,7 +465,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                     body = result;
                 }
 
-                const htmlHead = htmlDoc.querySelector('head');
+                const htmlHead = /** @type {HTMLHeadElement} */ (htmlDoc.querySelector('head'));
                 if (htmlHead) {
                     if (head.title) {
                         const htmlTitle = htmlHead.querySelector('title');
@@ -482,13 +482,27 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                     }
 
                     if (head.elements) {
-                        // Inject HTML links at the end of <head> for any stylesheets injected during rendering of the page:
-                        htmlHead.insertAdjacentHTML(
-                            'beforeend',
-                            Array.from(
-                                new Set(Array.from(head.elements).map(serializeElement)),
-                            ).join('\n'),
-                        );
+                        for (const element of head.elements) {
+                            const serialized = serializeElement(element);
+
+                            if (element.type === 'meta') {
+                                const keys = Object.keys(element.props || {});
+                                if (keys.length) {
+                                    // We're going to (somewhat naively) assume that the first prop is
+                                    // a unique identifier for the tag
+                                    const key = keys[0];
+                                    const val = element.props[key];
+
+                                    const existing = htmlHead.querySelector(`meta[${key}="${val}"]`);
+                                    if (existing) {
+                                        existing.replaceWith(serialized);
+                                        continue;
+                                    }
+                                }
+                            }
+
+                            htmlHead.insertAdjacentHTML('beforeend', serialized);
+                        }
                     }
                 }
 
