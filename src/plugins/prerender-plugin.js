@@ -482,6 +482,15 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                     }
 
                     if (head.elements) {
+                        // Remove existing elements that should be replaced
+                        for (const element of head.elements) {
+                            if (element.replace) {
+                                for (const existing of htmlHead.querySelectorAll(element.replace)) {
+                                    existing.remove();
+                                }
+                            }
+                        }
+
                         // Inject HTML links at the end of <head> for any stylesheets injected during rendering of the page:
                         htmlHead.insertAdjacentHTML(
                             'beforeend',
