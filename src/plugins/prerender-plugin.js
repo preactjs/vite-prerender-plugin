@@ -371,6 +371,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                         );
                         const sourceContent = await fs.readFile(sourcePath, 'utf-8');
 
+                        // TODO: `line` uses below are off by one with Vite 8, might be a bug?
+                        // Not the end of the world for now though it's annoying.
+
                         // `simple-code-frame` has 1-based line numbers
                         const frame = createCodeFrame(sourceContent, line - 1, column);
                         message += `\n

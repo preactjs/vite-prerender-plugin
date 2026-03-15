@@ -47,7 +47,7 @@ test('Should bail on merging preload & entry chunks if user configures `manualCh
             build: {
                 rollupOptions: {
                     output: {
-                        manualChunks: {}
+                        manualChunks() {}
                     }
                 }
             },
