@@ -175,16 +175,18 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             if (ssrBuild) return;
             // We're only going to alter the chunking behavior in the default cases, where the user and/or
             // other plugins haven't already configured this. It'd be impossible to avoid breakages otherwise.
+            // Vite 8 renamed `rollupOptions` to `rolldownOptions` :( -> fall back to rollupOptions for Vite 5–7
+            const _buildOpts = config.build.rolldownOptions ?? config.build.rollupOptions;
             if (
-                Array.isArray(config.build.rollupOptions.output) ||
-                config.build.rollupOptions.output?.manualChunks
+                Array.isArray(_buildOpts.output) ||
+                _buildOpts.output?.manualChunks
             ) {
                 viteConfig = config;
                 return;
             }
 
-            config.build.rollupOptions.output ??= {};
-            config.build.rollupOptions.output.manualChunks = (id) => {
+            _buildOpts.output ??= {};
+            _buildOpts.output.manualChunks = (id) => {
                 if (id.includes(prerenderScript) || id.includes(preloadPolyfillId)) {
                     return 'index';
                 }
@@ -233,16 +235,12 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 };
             } else if (id.includes(preloadPolyfillId)) {
                 const s = new MagicString(code);
-                // Replacement for `'link'` && `"link"` as the output from their tooling has
-                // differed over the years. Should be better than switching to regex.
+                // Matches both quote styles ('link' / "link") and optional semicolons, as the
+                // compiled output has varied across Vite/Rollup/Rolldown versions over the years.
                 // https://github.com/vitejs/vite/blob/20fdf210ee0ac0824b2db74876527cb7f378a9e8/packages/vite/src/node/plugins/modulePreloadPolyfill.ts#L62
                 s.replace(
-                    `const relList = document.createElement('link').relList;`,
+                    /const relList = document\.createElement\(["']link["']\)\.relList;?/,
                     `if (typeof window === "undefined") return;\n  const relList = document.createElement('link').relList;`,
-                );
-                s.replace(
-                    `const relList = document.createElement("link").relList;`,
-                    `if (typeof window === "undefined") return;\n  const relList = document.createElement("link").relList;`,
                 );
                 return {
                     code: s.toString(),
@@ -388,6 +386,15 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             /** @type {Partial<import('./types.d.ts').Head>} */
             let head = { lang: '', title: '', elements: new Set() };
 
+            // Vite 8 native Rolldown path: modulepreload polyfill is injected by rolldown/experimental
+            // and bypasses Vite's transform hook, so our window-check patch never runs. Stub document
+            // only for the duration of the import so the polyfill's feature-detection exits early
+            // (`relList.supports('modulepreload') === true`), without affecting user prerender code.
+            // @ts-ignore
+            const _documentStubbed = !('document' in globalThis);
+            // @ts-ignore
+            if (_documentStubbed) globalThis.document = { createElement: () => ({ relList: { supports: () => true } }) };
+
             let prerender;
             try {
                 const m = await import(
@@ -397,6 +404,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             } catch (e) {
                 const message = await handlePrerenderError(e);
                 this.error(message);
+            } finally {
+                // @ts-ignore
+                if (_documentStubbed) delete globalThis.document;
             }
 
             if (typeof prerender !== 'function') {
