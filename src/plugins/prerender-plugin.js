@@ -75,6 +75,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
     let viteConfig = {};
     let userEnabledSourceMaps;
     let ssrBuild = false;
+    let prerenderEntryHtml;
 
     /** @type {import('./types.d.ts').PrerenderedRoute[]} */
     let routes = [];
@@ -90,12 +91,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
     const tmpDirId = 'headless-prerender';
 
     /**
-     * From the non-external scripts in entry HTML document, find the one (if any)
-     * that provides a `prerender` export
-     *
      * @param {import('vite').Rollup.InputOption} input
      */
-    const getPrerenderScriptFromHTML = async (input) => {
+    const getPrerenderEntryHtml = (input) => {
         // prettier-ignore
         const entryHtml =
             typeof input === "string"
@@ -106,7 +104,17 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
         if (!entryHtml) throw new Error('Unable to detect entry HTML');
 
-        const htmlDoc = htmlParse(await fs.readFile(entryHtml, 'utf-8'));
+        return path.resolve(viteConfig.root, entryHtml);
+    };
+
+    /**
+     * From the non-external scripts in the entry HTML document, find the one (if any)
+     * that provides a `prerender` export
+     */
+    const getPrerenderScriptFromHtml = async () => {
+        if (!prerenderEntryHtml) throw new Error('Unable to detect entry HTML');
+
+        const htmlDoc = htmlParse(await fs.readFile(prerenderEntryHtml, 'utf-8'));
 
         const entryScriptTag = htmlDoc
             .getElementsByTagName('script')
@@ -118,7 +126,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
         if (!entrySrc || /^https:/.test(entrySrc))
             throw new Error('Prerender entry script must have a `src` attribute and be local');
 
-        return path.join(viteConfig.root, entrySrc);
+        return entrySrc.startsWith('/')
+            ? path.join(viteConfig.root, entrySrc)
+            : path.resolve(path.dirname(prerenderEntryHtml), entrySrc);
     };
 
     return {
@@ -134,7 +144,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             // Only required for Vite 5 and older. In 6+, this is handled by the
             // Environment API (`applyToEnvironment`)
             if (config.build?.ssr) {
-                ssrBuild = true
+                ssrBuild = true;
                 return;
             }
 
@@ -194,8 +204,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
         },
         async options(opts) {
             if (ssrBuild || !opts.input) return;
+            prerenderEntryHtml = getPrerenderEntryHtml(opts.input);
             if (!prerenderScript) {
-                prerenderScript = await getPrerenderScriptFromHTML(opts.input);
+                prerenderScript = await getPrerenderScriptFromHtml();
             }
 
             // prettier-ignore
@@ -288,9 +299,25 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
             };
 
             // Grab the generated HTML file, we'll use it as a template for all pages:
-            const tpl = /** @type {string} */ (
-                /** @type {OutputAsset} */ (bundle['index.html']).source
-            );
+            const entryHtmlAsset =
+                (prerenderEntryHtml &&
+                    Object.values(bundle).find(
+                        (output) =>
+                            output.type === 'asset' &&
+                            output.fileName.endsWith('.html') &&
+                            (output.originalFileName === prerenderEntryHtml ||
+                                output.originalFileNames?.includes(prerenderEntryHtml)),
+                    )) ||
+                /** @type {OutputAsset | undefined} */ (bundle['index.html']) ||
+                Object.values(bundle).find(
+                    (output) => output.type === 'asset' && output.fileName.endsWith('.html'),
+                );
+
+            if (!entryHtmlAsset) {
+                this.error('Unable to detect generated entry HTML asset');
+            }
+
+            const tpl = /** @type {string} */ (entryHtmlAsset.source);
 
             // Create a tmp dir to allow importing & consuming the built modules,
             // before Rollup writes them to the disk
@@ -319,10 +346,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
                 const assetPath = path.join(tmpDir, output);
                 await fs.mkdir(path.dirname(assetPath), { recursive: true });
-                await fs.writeFile(
-                    assetPath,
-                    /** @type {OutputChunk} */ (bundle[output]).code,
-                );
+                await fs.writeFile(assetPath, /** @type {OutputChunk} */ (bundle[output]).code);
 
                 if (/** @type {OutputChunk} */ (bundle[output]).exports?.includes('prerender')) {
                     prerenderEntry = /** @type {OutputChunk} */ (bundle[output]);
@@ -348,9 +372,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                         // do something in browsers only
                     }`.replace(/^ {20}/gm, '');
 
-                const stack = StackTraceParse(e).find((s) =>
-                    s.getFileName()?.includes(tmpDirId),
-                );
+                const stack = StackTraceParse(e).find((s) => s.getFileName()?.includes(tmpDirId));
 
                 const sourceMapContent = prerenderEntry.map;
                 if (stack && sourceMapContent) {
@@ -390,9 +412,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
             let prerender;
             try {
-                const m = await import(
-                    `file://${path.join(tmpDir, prerenderEntry.fileName)}`
-                );
+                const m = await import(`file://${path.join(tmpDir, prerenderEntry.fileName)}`);
                 prerender = m.prerender;
             } catch (e) {
                 const message = await handlePrerenderError(e);
@@ -506,8 +526,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
                 // Add generated HTML to compilation:
                 route.url == '/'
-                    ? (/** @type {OutputAsset} */ (bundle['index.html']).source =
-                          htmlDoc.toString())
+                    ? (entryHtmlAsset.source = htmlDoc.toString())
                     : this.emitFile({
                           type: 'asset',
                           fileName: assetName,
@@ -535,6 +554,6 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                     }
                 }
             }
-        }
+        },
     };
 }
