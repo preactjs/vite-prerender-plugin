@@ -37,6 +37,14 @@ test('Should merge preload and entry chunks', async () => {
     assert.equal((await fs.readdir(outDirAssets)).length, 1);
 });
 
+test('Should support nested HTML entrypoints', async () => {
+    await loadFixture('nested-entry', env);
+    await viteBuild(env.tmp.path);
+
+    const prerenderedHtml = await getOutputFile(env.tmp.path, 'src/dashboard/index.html');
+    assert.match(prerenderedHtml, '<h1>Nested Entry Test Result</h1>');
+});
+
 test('Should bail on merging preload & entry chunks if user configures `manualChunks`', async () => {
     await loadFixture('simple', env);
     await writeConfig(env.tmp.path, `
