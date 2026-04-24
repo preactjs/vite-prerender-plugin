@@ -346,7 +346,10 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
                 const assetPath = path.join(tmpDir, output);
                 await fs.mkdir(path.dirname(assetPath), { recursive: true });
-                await fs.writeFile(assetPath, /** @type {OutputChunk} */ (bundle[output]).code);
+                await fs.writeFile(
+                    assetPath,
+                    /** @type {OutputChunk} */ (bundle[output]).code,
+                );
 
                 if (/** @type {OutputChunk} */ (bundle[output]).exports?.includes('prerender')) {
                     prerenderEntry = /** @type {OutputChunk} */ (bundle[output]);
@@ -372,7 +375,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                         // do something in browsers only
                     }`.replace(/^ {20}/gm, '');
 
-                const stack = StackTraceParse(e).find((s) => s.getFileName()?.includes(tmpDirId));
+                const stack = StackTraceParse(e).find((s) =>
+                    s.getFileName()?.includes(tmpDirId),
+                );
 
                 const sourceMapContent = prerenderEntry.map;
                 if (stack && sourceMapContent) {
@@ -412,7 +417,9 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
             let prerender;
             try {
-                const m = await import(`file://${path.join(tmpDir, prerenderEntry.fileName)}`);
+                const m = await import(
+                    `file://${path.join(tmpDir, prerenderEntry.fileName)}`
+                );
                 prerender = m.prerender;
             } catch (e) {
                 const message = await handlePrerenderError(e);
