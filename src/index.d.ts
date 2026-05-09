@@ -1,11 +1,11 @@
 import { Plugin } from 'vite';
-import { ComplexRoute } from './plugins/types.d.ts';
+import type { PrerenderedRoute } from './plugins/types.d.ts';
 
 export interface PrerenderOptions {
     prerenderScript?: string;
     renderTarget?: string;
     additionalPrerenderRoutes?: string[];
-    resolveRoute?: (route: ComplexRoute) => string;
+    resolveRoute?: (route: PrerenderedRoute) => string;
 }
 
 export interface PreviewMiddlewareOptions {
