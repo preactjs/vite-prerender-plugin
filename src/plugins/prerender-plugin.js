@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
+import { isDeepStrictEqual } from 'node:util';
 
 import { createLogger } from 'vite';
 import MagicString from 'magic-string';
@@ -71,7 +72,7 @@ function serializeElement(element) {
  * @param {import('../index.d.ts').PrerenderOptions} options
  * @returns {import('vite').Plugin}
  */
-export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrerenderRoutes } = {}) {
+export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrerenderRoutes, resolveRoute } = {}) {
     let viteConfig = {};
     let userEnabledSourceMaps;
     let ssrBuild = false;
@@ -82,6 +83,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
     renderTarget ||= 'body';
     additionalPrerenderRoutes ||= [];
+    resolveRoute ||= (route) => route.url
 
     const preloadHelperId = 'vite/preload-helper';
     const preloadPolyfillId = 'vite/modulepreload-polyfill';
@@ -430,17 +432,40 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
                 this.error('Detected `prerender` export, but it is not a function');
             }
 
+            /**
+             * @param route {import('./types.d.ts').Route}
+             * @returns {import('./types.d.ts').ComplexRoute}
+             */
+            const normalizeRoute = (route) => {
+                if (typeof route === "string") {
+                    return ({ url: route })
+                } else if (typeof route === "object") {
+                    if (typeof route.url === "undefined") {
+                        this.error('Route objects should have a defined url')
+                    } else if (typeof route.url !== "string") {
+                        this.error('Route url should be a string')
+                    }
+
+                    return route
+                }
+            }
+
             // We start by pre-rendering the home page.
             // Links discovered during pre-rendering get pushed into the list of routes.
-            const seen = new Set(['/', ...additionalPrerenderRoutes]);
+            /** @type {Map<string, import('./types.d.ts').ComplexRoute>} */
+            const seen = new Map(['/', ...additionalPrerenderRoutes].map((route) => {
+                let normalizedRoute = normalizeRoute(route);
+                return [resolveRoute(normalizedRoute), normalizedRoute];
+            }));
 
-            routes = [...seen].map((link) => ({ url: link }));
+            routes = [...seen.values()];
 
             for (const route of routes) {
                 if (!route.url) continue;
 
-                const outDir = route.url.replace(/(^\/|\/$)/g, '');
+                const outDir = resolveRoute(route).replace(/(^\/|\/$)/g, '');
                 const assetName = path.join(outDir, outDir.endsWith('.html') ? '' : 'index.html');
+                console.log(assetName)
 
                 // Update `location` to current URL so routers can use things like `location.pathname`
                 const u = new URL(route.url, 'http://localhost');
@@ -470,13 +495,15 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
                 // Add any discovered links to the list of routes to pre-render:
                 if (result.links) {
-                    for (let url of result.links) {
-                        const parsed = new URL(url, 'http://localhost');
-                        url = parsed.pathname.replace(/\/$/, '') || '/';
+                    for (let link of result.links) {
+                        link = normalizeRoute(link);
+                        const parsed = new URL(link.url, 'http://localhost');
+                        link.url = parsed.pathname.replace(/\/$/, '') || '/';
+                        let resolved = resolveRoute(link);
                         // ignore external links and ones we've already picked up
-                        if (seen.has(url) || parsed.origin !== 'http://localhost') continue;
-                        seen.add(url);
-                        routes.push({ url, _discoveredBy: route });
+                        if (seen.has(resolved) || parsed.origin !== 'http://localhost') continue;
+                        seen.set(resolved, link);
+                        routes.push({ ...link, _discoveredBy: route });
                     }
                 }
 

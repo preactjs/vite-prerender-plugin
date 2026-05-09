@@ -143,4 +143,20 @@ test('Should support the `additionalPrerenderRoutes` plugin option', async () =>
     assert.ok(await outputFileExists(env.tmp.path, 'not-found/index.html'));
 });
 
+test('Should support the `resolveRoute` plugin optionm', async () => {
+    await loadFixture('complex-routes', env);
+    await writeConfig(env.tmp.path, `
+        import { defineConfig } from 'vite';
+        import { vitePrerenderPlugin } from 'vite-prerender-plugin';
+
+        export default defineConfig({
+            plugins: [vitePrerenderPlugin({ resolveRoute: (route) => { console.log(route); return \`\${route.data ? "/data" : ""}\${route.url}\` } })],
+        });
+    `);
+    await viteBuild(env.tmp.path);
+
+    assert.ok(await outputFileExists(env.tmp.path, 'index.html'));
+    assert.ok(await outputFileExists(env.tmp.path, 'data/data/index.html'));
+})
+
 test.run();
