@@ -465,7 +465,6 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
                 const outDir = resolveRoute(route).replace(/(^\/|\/$)/g, '');
                 const assetName = path.join(outDir, outDir.endsWith('.html') ? '' : 'index.html');
-                console.log(assetName)
 
                 // Update `location` to current URL so routers can use things like `location.pathname`
                 const u = new URL(route.url, 'http://localhost');
