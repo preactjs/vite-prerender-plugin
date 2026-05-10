@@ -10,8 +10,14 @@ export interface Head {
     elements: Set<HeadElement>;
 }
 
-export interface PrerenderedRoute {
+export type Route = ComplexRoute | ComplexRoute["url"];
+
+export interface ComplexRoute {
     url: string;
+    data?: any;
+}
+
+export interface PrerenderedRoute extends ComplexRoute {
     _discoveredBy?: PrerenderedRoute;
 }
 
@@ -23,7 +29,7 @@ export interface PrerenderArguments {
 
 export type PrerenderResult = {
     html: string;
-    links?: Set<string>;
+    links?: Set<Route>;
     data?: any;
     head?: Partial<Head>;
 } | string

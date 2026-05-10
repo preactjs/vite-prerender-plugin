@@ -1,9 +1,11 @@
 import { Plugin } from 'vite';
+import type { PrerenderedRoute } from './plugins/types.d.ts';
 
 export interface PrerenderOptions {
     prerenderScript?: string;
     renderTarget?: string;
     additionalPrerenderRoutes?: string[];
+    resolveRoute?: (route: PrerenderedRoute) => string;
 }
 
 export interface PreviewMiddlewareOptions {
