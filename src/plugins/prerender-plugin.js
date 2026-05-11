@@ -185,7 +185,7 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
             config.build.rollupOptions.output ??= {};
             config.build.rollupOptions.output.manualChunks = (id) => {
-                if (id.includes(prerenderScript) || id.includes(preloadPolyfillId)) {
+                if (id.includes(preloadPolyfillId)) {
                     return 'index';
                 }
             };
