@@ -1,0 +1,8 @@
+minimumReleaseAge: 10080
+
+blockExoticSubdeps: true
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
