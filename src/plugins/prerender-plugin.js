@@ -72,6 +72,7 @@ function serializeElement(element) {
  * @returns {import('vite').Plugin}
  */
 export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrerenderRoutes } = {}) {
+    const originalPrerenderScript = prerenderScript;
     let viteConfig = {};
     let userEnabledSourceMaps;
     let ssrBuild = false;
@@ -195,7 +196,12 @@ export function prerenderPlugin({ prerenderScript, renderTarget, additionalPrere
 
             config.build.rollupOptions.output ??= {};
             config.build.rollupOptions.output.manualChunks = (id) => {
-                if (id.includes(prerenderScript) || id.includes(preloadPolyfillId)) {
+                // If the user has specified a prerender script via the plugin options, we don't
+                // want to merge it into the index, but if they're using `<script prerender>` in their
+                // HTML, then we do.
+                //
+                // As such, we grab & store the original value & check against it here.
+                if ((!originalPrerenderScript && id.includes(prerenderScript)) || id.includes(preloadPolyfillId)) {
                     return 'index';
                 }
             };

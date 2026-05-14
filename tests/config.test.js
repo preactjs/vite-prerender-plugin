@@ -1,5 +1,7 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import path from 'node:path';
+import { promises as fs } from 'node:fs';
 
 import { setupTest, teardownTest, loadFixture, viteBuild } from './lib/lifecycle.js';
 import { getOutputFile, outputFileExists, writeFixtureFile } from './lib/utils.js';
@@ -30,6 +32,12 @@ test('Should support the `prerenderScript` plugin option', async () => {
 
     const prerenderedHtml = await getOutputFile(env.tmp.path, 'index.html');
     assert.match(prerenderedHtml, '<body><h1>Hello, World!</h1>');
+
+    const outDirAssets = await fs.readdir(path.join(env.tmp.path, 'dist', 'assets'));
+
+    assert.equal(outDirAssets.length, 2);
+    assert.ok(outDirAssets.some(asset => /^index-/.test(asset)))
+    assert.ok(outDirAssets.some(asset => /^prerender-/.test(asset)))
 });
 
 test('Should throw if no `prerenderScript` is specified or can be found', async () => {
