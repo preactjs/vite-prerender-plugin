@@ -30,10 +30,18 @@ if (typeof window !== 'undefined') {
 }
 
 export async function prerender(data) {
-    const { renderToString } = await import('react-dom/server');
+    const { prerender: reactPrerender } = await import('react-dom/static');
     const { parseLinks } = await import('vite-prerender-plugin/parse');
 
-    const html = await renderToString(<App {...data} />);
+    const { prelude } = await reactPrerender(<App {...data} />);
+    const reader = prelude.getReader();
+    let html = '';
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        html += Buffer.from(value).toString('utf-8');
+    }
+
     const links = parseLinks(html);
 
     return { html, links };
