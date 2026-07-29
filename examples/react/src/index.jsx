@@ -30,7 +30,7 @@ if (typeof window !== 'undefined') {
 }
 
 export async function prerender(data) {
-    const { renderToString } = await import('react-dom/server');
+    const { renderToString } = await import('react-dom/server.edge');
     const { parseLinks } = await import('vite-prerender-plugin/parse');
 
     const html = await renderToString(<App {...data} />);
