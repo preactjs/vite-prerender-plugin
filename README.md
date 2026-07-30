@@ -82,9 +82,12 @@ export async function prerender(data) {
             // Sets any additional elements you want injected into the `<head>`:
             //   <link rel="stylesheet" href="foo.css">
             //   <meta property="og:title" content="Social media title">
+            //   <meta name="description" content="My cool description">
             elements: new Set([
                 { type: 'link', props: { rel: 'stylesheet', href: 'foo.css' } },
                 { type: 'meta', props: { property: 'og:title', content: 'Social media title' } },
+                // Use `replace` with a CSS selector to remove existing elements before inserting:
+                { type: 'meta', props: { name: 'description', content: 'My cool description' }, replace: 'meta[name="description"]' },
             ]),
         },
     };
