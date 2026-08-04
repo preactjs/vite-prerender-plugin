@@ -116,4 +116,30 @@ test('Should support `head.elements` property', async () => {
     assert.match(prerenderedHtml, '<meta property="og:title" content="Social media title">');
 });
 
+test('Should support `head.elements` property replacing', async () => {
+    await loadFixture('simple', env);
+    await writeEntry(env.tmp.path, `
+        export async function prerender() {
+            return {
+                html: '<h1>Hello, World!</h1>',
+                head: {
+                    elements: new Set([
+                        { type: 'meta', props: { name: 'description', content: 'Foo' } },
+                    ]),
+                },
+            };
+        }
+    `);
+    await viteBuild(env.tmp.path);
+
+    const prerenderedHtml = await getOutputFile(env.tmp.path, 'index.html');
+    const matches = Array.from(
+        prerenderedHtml.matchAll(/<meta name="description"/g),
+        (m) => m[0]
+    );
+    assert.is(matches.length, 1);
+    assert.match(prerenderedHtml, '<meta name="description" content="Foo">');
+    assert.not.match(prerenderedHtml, '<meta name="description" content="A simple web page with a prerendered script.">');
+});
+
 test.run();
