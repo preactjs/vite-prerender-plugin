@@ -79,7 +79,8 @@ export async function prerender(data) {
             // Sets the title for the current page: `<title>My cool page</title>`
             title: 'My cool page',
 
-            // Sets any additional elements you want injected into the `<head>`:
+            // Sets any additional elements you want injected into the `<head>`.
+            // `type: 'meta'` elements will replace existing matching tags in the input HTML:
             //   <link rel="stylesheet" href="foo.css">
             //   <meta property="og:title" content="Social media title">
             elements: new Set([
