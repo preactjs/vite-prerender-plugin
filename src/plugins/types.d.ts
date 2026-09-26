@@ -2,6 +2,8 @@ export interface HeadElement {
     type: string;
     props: Record<string, string>;
     children?: string;
+    /** CSS selector to find and remove existing elements before inserting this one */
+    replace?: string;
 }
 
 export interface Head {
